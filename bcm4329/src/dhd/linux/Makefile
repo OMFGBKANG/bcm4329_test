@@ -3,7 +3,7 @@
 #
 # Copyright (C) 1999-2010, Broadcom Corporation
 # 
-#         Unless you and Broadcom execute a separate written software license
+#      Unless you and Broadcom execute a separate written software license
 # agreement governing use of this software, this software is licensed to you
 # under the terms of the GNU General Public License version 2 (the "GPL"),
 # available at http://www.broadcom.com/licenses/GPLv2.php, with the
@@ -21,7 +21,7 @@
 # software in any way with any other Broadcom software provided under a license
 # other than the GPL, without Broadcom's express prior written consent.
 #
-# $Id: Makefile,v 1.55.2.6.2.10.6.17.4.11.2.5 2010/09/13 13:11:50 Exp $
+# $Id: Makefile,v 1.55.2.6.2.10.6.40 2010/04/29 23:29:33 Exp $
 #
 
 # Try a couple of places for LINUXDIR if not specified
@@ -54,6 +54,9 @@ ifeq ($(LINUXVER),)
      $(error LINUXVER=$(LINUXVER) is empty)
 endif # LINUXVER
 
+$(warning Found LINUXVER=$(LINUXVER))
+$(warning Found LINUXDIR=$(LINUXDIR))
+
 # check if 2.4 kernel or 2.5+ kernel
 BCM_KVER:=$(shell echo $(LINUXVER) | cut -c1-3 | sed 's/2\.[56]/2\.6/')
 
@@ -67,14 +70,14 @@ OBJCOPY := $(CROSS_COMPILE)objcopy
 ifeq ($(SRCBASE),)
 SRCBASE := $(shell /bin/pwd)/../..
 endif
-vpath %.c $(SRCBASE)/dhd/sys $(SRCBASE)/shared $(SRCBASE)/bcmsdio/sys $(SRCBASE)/wl/sys
+vpath %.c $(SRCBASE)/dhd/sys $(SRCBASE)/shared $(SRCBASE)/bcmsdio/sys $(SRCBASE)/wl/sys $(SRCBASE)/crypto
 
 ## Initialize DFLAGS
 DFLAGS :=
 
 
 # basic options (defines in DFLAGS, includes in IFLAGS)
-DFLAGS += -DLINUX -DSRCBASE=\"$(SRCBASE)\" -DBCMDRIVER -DBCMDONGLEHOST -DDHDTHREAD -DBCMWPA2
+DFLAGS += -DLINUX -DSRCBASE=\"$(SRCBASE)\" -DBCMDRIVER -DBCMDONGLEHOST -DDHDTHREAD -DBCMWPA2 -DBCMWAPI_WPI
 DFLAGS += -DUNRELEASEDCHIP
 ifeq ($(BCMQT),1)
 	DFLAGS += -DBCMSLTGT -DBCMQT
@@ -89,7 +92,12 @@ endif
 # append new include paths to existing ones to get 2.6.29+ kernels compile
 
 # Default DHDARCH is x86
-DHDARCH ?= x86
+ifdef ARCH
+   DHDARCH ?= $(ARCH)
+else
+   DHDARCH ?= x86
+endif
+
 ifneq ($(findstring native,$(TARGET)),)
    DHDARCH = x86
 endif
@@ -152,12 +160,24 @@ ifeq ($(WLTEST),1)
 endif
 
 ifeq ($(CONFIG_NET_RADIO),y)
-CFILES += wl_iw.c bcmwifi.c
+CFILES +=  bcmwifi.c
+CFILES += wl_iw.c
 else
 	ifeq ($(CONFIG_WIRELESS_EXT),y)
-	CFILES += wl_iw.c bcmwifi.c
+	CFILES += bcmwifi.c
+	CFILES += wl_iw.c
 	endif
 endif
+ifeq ($(BCM_KVER), 2.6)
+CFG80211_KVER:=$(shell echo $(LINUXVER) | cut -c5-6 | sed 's/3[1-9]/true/')
+ifeq ($(CFG80211_KVER), true)
+	ifeq ($(CONFIG_CFG80211),m)
+	DFLAGS += -DCONFIG_CFG80211
+	CFILES += wl_cfg80211.c
+	endif
+endif
+endif
+
 
 OFILES=$(CFILES:.c=.o)
 
@@ -165,27 +185,6 @@ OFILES=$(CFILES:.c=.o)
 ifneq ($(findstring -debug-,-$(TARGET)-),)
 DFLAGS += -DDHD_DEBUG -DSDTEST
 endif
-
-# Building with -proptxstatus- to enable queuing in host
-ifneq ($(findstring -sdstd-,-$(TARGET)-),)
-ifneq ($(findstring -proptxstatus-,-$(TARGET)-),)
-DFLAGS += -DPROP_TXSTATUS
-endif
-endif
-
-ifneq ($(findstring -sdstd-,-$(TARGET)-),)
-ifneq ($(findstring -dbgwlfc-,-$(TARGET)-),)
-DFLAGS += -DPROP_TXSTATUS_DEBUG
-endif
-endif
-
-# Building with -proptxstatus- to enable queuing in host for usb build
-ifneq ($(findstring -usb-,-$(TARGET)-),)
-ifneq ($(findstring -proptxstatus-,-$(TARGET)-),)
-DFLAGS += -DPROP_TXSTATUS
-endif
-endif
-
 
 # Make big-endian a separate option
 ifneq ($(findstring -be-,-$(TARGET)-),)
@@ -211,13 +210,11 @@ ifneq ($(findstring -rndis-,-$(TARGET)-),)
 DFLAGS += -DRNDIS
 CFILES += dhd_rndis.c
 endif
-
+		  
 ifneq ($(findstring -usb-,-$(TARGET)-),)
 DFLAGS += -DBCMDHDUSB
 CFILES += dhd_usb_linux.c
 endif
-DFLAGS += -DDONGLEOVERLAYS
-
 ifneq ($(findstring -sdio-,-$(TARGET)-),)
 DFLAGS += -DBCMSDIO
 CFILES += dhd_sdio.c
@@ -226,8 +223,12 @@ ifneq ($(findstring -sdstd-,$(TARGET)-),)
 DFLAGS += -DBCMSDIO -DBCMSDIOH_STD
 CFILES += dhd_sdio.c bcmsdh.c bcmsdstd.c bcmsdstd_linux.c bcmsdh_linux.c
 endif
+ifneq ($(findstring -softap-,-$(TARGET)-),)
+DFLAGS += -DSOFTAP
+CFILES += sha1.c md5.c
+endif
 ifneq ($(findstring -nexus-,-$(TARGET)-),)
-DFLAGS += -Dlinux
+DFLAGS += -DOEM_ANDROID -DEMBEDDED_PLATFORM -DARP_OFFLOAD_SUPPORT -DPKT_FILTER_SUPPORT
 DFLAGS += -DOEM_ANDROID
 DFLAGS += -DBCMDBG
 DFLAGS += -DDHD_USE_STATIC_BUF
@@ -235,6 +236,7 @@ DFLAGS += -DCUSTOMER_HW2
 DFLAGS += -DCUSTOM_OOB_GPIO_NUM=152
 DFLAGS += -DOOB_INTR_ONLY
 DFLAGS += -DMMC_SDIO_ABORT
+DFLAGS += -DSOFTAP
 else
 ifneq ($(findstring -oob-,-$(TARGET)-),)
 DFLAGS += -DOOB_INTR_ONLY
@@ -265,6 +267,13 @@ ifneq ($(findstring -intc1,$(shell echo $(LINUXVER))),)
 DFLAGS += -DSANDGATE2G
 endif
 
+ifeq ($(OEM_ANDROID),1)
+DFLAGS += -DOEM_ANDROID -DEMBEDDED_PLATFORM -DARP_OFFLOAD_SUPPORT -DPKT_FILTER_SUPPORT
+endif
+ifeq ($(OEM_CHROMIUMOS),1)
+DFLAGS += -DOEM_CHROMIUMOS -DEMBEDDED_PLATFORM -DARP_OFFLOAD_SUPPORT -DPKT_FILTER_SUPPORT
+endif
+
 CFLAGS += -fshort-wchar $(DFLAGS) $(WFLAGS) $(IFLAGS) $(CUSTOM_FLAGS)
 
 
@@ -281,6 +290,7 @@ else
   KMODULES:=$(MODULES)
 endif
 
+
 # host options
 HOSTCC := $(CC)
 ifneq ($(BCM_KVER), 2.6)
@@ -295,21 +305,15 @@ endif
 
 TARGETS := \
 	dhd-cdc-usb dhd-cdc-sdstd \
-	dhd-cdc-sdspi-pci dhd-cdc-sdmmc-oob-gpl dhd-cdc-sdmmc-nexus-gpl \
-	dhd-cdc-sdmmc-gpl dhd-cdc-usb-gpl \
-	dhd-cdc-sdstd-proptxstatus \
-	dhd-cdc-sdstd-proptxstatus-gpl \
-	dhd-cdc-sdstd-proptxstatus-dbgwlfc \
-	dhd-cdc-usb-proptxstatus-dbgwlfc \
-	dhd-cdc-usb-proptxstatus \
-	dhd-cdc-usb-proptxstatus-gpl
+	dhd-cdc-sdspi-pci dhd-cdc-sdmmc-gpl dhd-cdc-sdmmc-oob-gpl dhd-cdc-sdmmc-nexus-gpl\
+	dhd-cdc-usb-apsta dhd-cdc-usb-gpl \
+	dhd-cdc-sdstd-apsta \
+	dhd-cdc-sdmmc-softap-gpl
 
 
 TARGETS += \
 	dhd-cdc-sdio-dnglimage dhd-cdc-sdspi-pci-dnglimage \
 	dhd-cdc-gspi-pci
-TARGETS += \
-	dhd-cdc-sdstd-apsta
 #ifdef RNDIS
 TARGETS += dhd-rndis-usb
 #endif
@@ -368,7 +372,7 @@ else
 modules: $(MODULES)
 endif
 
-dhd.o: $(OFILES)
+$(MODULES): $(OFILES)
 	$(LD) $(LDFLAGS) -o $@ $^
 
 ifeq ($(BCM_KVER), 2.6)

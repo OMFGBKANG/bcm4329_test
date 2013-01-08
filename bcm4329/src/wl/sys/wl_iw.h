@@ -1,7 +1,7 @@
 /*
  * Linux Wireless Extensions support
  *
- * Copyright (C) 1999-2010, Broadcom Corporation
+ * Copyright (C) 1999-2009, Broadcom Corporation
  * 
  *         Unless you and Broadcom execute a separate written software license
  * agreement governing use of this software, this software is licensed to you
@@ -21,7 +21,7 @@
  * software in any way with any other Broadcom software provided under a license
  * other than the GPL, without Broadcom's express prior written consent.
  *
- * $Id: wl_iw.h,v 1.5.34.1.6.7.4.4 2010/04/01 23:18:43 Exp $
+ * $Id: wl_iw.h,v 1.5.34.1.20.14 2010/04/29 00:57:27 Exp $
  */
 
 
@@ -34,7 +34,10 @@
 #include <proto/ethernet.h>
 #include <wlioctl.h>
 
-#define SOFTAP 1 // LGE
+
+
+
+
 
 #define	WL_IW_RSSI_MINVAL		-200	
 #define	WL_IW_RSSI_NO_SIGNAL	-91	
@@ -51,7 +54,7 @@
 #define WL_IW_SET_PASSIVE_SCAN	(SIOCIWFIRSTPRIV+5)
 #define WL_IW_GET_LINK_SPEED	(SIOCIWFIRSTPRIV+7)
 #define WL_IW_GET_CURR_MACADDR	(SIOCIWFIRSTPRIV+9)
-#define WL_IW_SET_STOP				(SIOCIWFIRSTPRIV+11)
+#define WL_IW_SET_STOP			(SIOCIWFIRSTPRIV+11)
 #define WL_IW_SET_START			(SIOCIWFIRSTPRIV+13)
 
 
@@ -61,28 +64,24 @@
 #define WL_AP_BSS_START         (SIOCIWFIRSTPRIV+21)
 #define AP_LPB_CMD              (SIOCIWFIRSTPRIV+23)
 #define WL_AP_STOP              (SIOCIWFIRSTPRIV+25)
-#if defined(CONFIG_LGE_BCM432X_PATCH)
+#if defined(CONFIG_LGE_BCM432X_PATCH) && defined(SOFTAP)
 #define WL_FW_RELOAD            (SIOCIWFIRSTPRIV+27)
 #define WL_IW_SET_STOP_SOFTAP	(SIOCIWFIRSTPRIV+29)
 #define WL_IW_SET_START_SOFTAP	(SIOCIWFIRSTPRIV+31)
 #define WL_AP_SPARE1            (SIOCIWFIRSTPRIV+33)
 #define WL_AP_SPARE2            (SIOCIWFIRSTPRIV+35)
 #define WL_AP_SPARE3            (SIOCIWFIRSTPRIV+37)
-#else
+#else	/* defined(CONFIG_LGE_BCM432X_PATCH) && defined(SOFTAP) */
 #define WL_AP_SPARE1            (SIOCIWFIRSTPRIV+27)
 #define WL_AP_SPARE2            (SIOCIWFIRSTPRIV+29)
 #define WL_AP_SPARE3            (SIOCIWFIRSTPRIV+31)
-#endif /* CONFIG_LGE_BCM432X_PATCH */
+#endif	/* defined(CONFIG_LGE_BCM432X_PATCH) && defined(SOFTAP) */
+
 #define 		G_SCAN_RESULTS 8*1024
 #define 		WE_ADD_EVENT_FIX	0x80
 #define          G_WLAN_SET_ON	0
 #define          G_WLAN_SET_OFF	1
 
-#define CHECK_EXTRA_FOR_NULL(extra) \
-if (!extra) { \
-	WL_ERROR(("%s: error : extra is null pointer\n", __FUNCTION__)); \
-	return -EINVAL; \
-}
 
 typedef struct wl_iw {
 	char nickname[IW_ESSID_MAX_SIZE];
@@ -92,8 +91,7 @@ typedef struct wl_iw {
 	int spy_num;
 	uint32 pwsec;			
 	uint32 gwsec;			
-	// louislee : added for WPS
-	bool privacy_invoked;       /* IW_AUTH_PRIVACY_INVOKED setting */
+	bool privacy_invoked; 		
 
 	struct ether_addr spy_addr[IW_MAX_SPY];
 	struct iw_quality spy_qual[IW_MAX_SPY];
@@ -111,12 +109,19 @@ struct wl_ctrl {
 	struct completion sysioc_exited;
 };
 
-#define WLC_IW_SS_CACHE_MAXLEN				512
+/* LGE_CHANGE_S, [jisung.yang@lge.com], 2010-06-28, < MAC write > */
+#if defined(CONFIG_LGE_BCM432X_PATCH)
+#define WLC_IW_SS_CACHE_MAXLEN              1024
+#else
+#define WLC_IW_SS_CACHE_MAXLEN              512
+#endif  /* defined(CONFIG_LGE_BCM432X_PATCH) */
+/* LGE_CHANGE_E, [jisung.yang@lge.com], 2010-06-28, < MAC write > */
+
 #define WLC_IW_SS_CACHE_CTRL_FIELD_MAXLEN	32
 #define WLC_IW_BSS_INFO_MAXLEN 				\
 	(WLC_IW_SS_CACHE_MAXLEN - WLC_IW_SS_CACHE_CTRL_FIELD_MAXLEN)
 
-typedef struct wl_iw_ss_cache {
+typedef struct wl_iw_ss_cache{
 	uint32 buflen;
 	uint32 version;
 	uint32 count;
@@ -135,13 +140,13 @@ typedef struct wl_iw_ss_cache_ctrl {
 	uint m_cons_br_scan_cnt;	
 	struct timer_list *m_timer;	
 } wl_iw_ss_cache_ctrl_t;
-
 typedef enum broadcast_first_scan {
 	BROADCAST_SCAN_FIRST_IDLE = 0,
 	BROADCAST_SCAN_FIRST_STARTED,
 	BROADCAST_SCAN_FIRST_RESULT_READY,
 	BROADCAST_SCAN_FIRST_RESULT_CONSUMED
 } broadcast_first_scan_t;
+
 #ifdef SOFTAP
 #define SSID_LEN	33
 #define SEC_LEN		16
@@ -155,6 +160,8 @@ struct ap_profile {
 	uint32	preamble;
 	uint32	max_scb;	
 };
+
+
 #define MACLIST_MODE_DISABLED	0
 #define MACLIST_MODE_ENABLED	1
 #define MACLIST_MODE_ALLOW		2
@@ -167,7 +174,7 @@ struct mac_list_set {
 	struct mflist white_list;
 	struct mflist black_list;
 };
-#endif /* SOFTAP */
+#endif   
 
 #if WIRELESS_EXT > 12
 #include <net/iw_handler.h>

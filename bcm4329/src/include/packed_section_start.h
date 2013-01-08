@@ -17,7 +17,7 @@
  *
  * Copyright (C) 1999-2010, Broadcom Corporation
  * 
- *         Unless you and Broadcom execute a separate written software license
+ *      Unless you and Broadcom execute a separate written software license
  * agreement governing use of this software, this software is licensed to you
  * under the terms of the GNU General Public License version 2 (the "GPL"),
  * available at http://www.broadcom.com/licenses/GPLv2.php, with the
@@ -34,7 +34,7 @@
  *      Notwithstanding the above, under no circumstances may you combine this
  * software in any way with any other Broadcom software provided under a license
  * other than the GPL, without Broadcom's express prior written consent.
- * $Id: packed_section_start.h,v 1.1.6.3.150.1 2010/09/08 22:04:06 Exp $
+ * $Id: packed_section_start.h,v 1.1.6.3 2008/12/10 00:27:54 Exp $
  */
 
 
@@ -52,7 +52,7 @@
 
 #if defined(__GNUC__)
 	#define	BWL_PRE_PACKED_STRUCT
-	#define	BWL_POST_PACKED_STRUCT	__attribute__ ((packed))
+	#define	BWL_POST_PACKED_STRUCT	__attribute__((packed))
 #elif defined(__CC_ARM)
 	#define	BWL_PRE_PACKED_STRUCT	__packed
 	#define	BWL_POST_PACKED_STRUCT

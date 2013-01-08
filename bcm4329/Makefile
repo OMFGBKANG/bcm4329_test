@@ -18,7 +18,6 @@ obj-$(CONFIG_BRCM_USE_STATIC_BUF) += brcm_static_buf.o
 
 wireless-objs = \
 	src/dhd/sys/dhd_linux.o \
-	src/dhd/sys/dhd_linux_sched.o \
 	src/shared/linux_osl.o \
 	src/shared/bcmutils.o \
 	src/dhd/sys/dhd_common.o \
@@ -31,6 +30,7 @@ wireless-objs = \
 	src/shared/bcmwifi.o \
 	src/dhd/sys/dhd_cdc.o \
 	src/dhd/sys/dhd_sdio.o \
+	src/dhd/sys/dhd_linux_sched.o \
 	src/bcmsdio/sys/bcmsdh_sdmmc.o \
 	src/bcmsdio/sys/bcmsdh.o \
 	src/bcmsdio/sys/bcmsdh_linux.o \
@@ -49,7 +49,7 @@ EXTRA_CFLAGS = \
 	-DDHD_BCMEVENTS \
 	-DSHOW_EVENTS \
 	-DBCMSDIO \
-	-DDHD_GPL -DDHD_SCHED\
+	-DDHD_GPL \
 	-DBCMLXSDMMC \
 	-DBCMPLATFORM_BUS \
 	-DSDIO_ISR_THREAD \
@@ -66,9 +66,8 @@ EXTRA_CFLAGS = \
 	-DSDIO_DEVICE_ID_BROADCOM_4325=0x4c6 \
 	-DSDIO_DEVICE_ID_BROADCOM_4329=0x4329 \
 	-DANDROID_SPECIFIC \
-	-DDONGLEOVERLAYS \
-	-DMMC_SDIO_ABORT \
-#-DAP -DAPSTA_PINGTEST \
+	-DOEM_ANDROID -DEMBEDDED_PLATFORM \
+	-DDHD_SCHED \
 
 #	\
 	-fshort-wchar \
@@ -76,6 +75,16 @@ EXTRA_CFLAGS = \
 	-Iinclude \
 	-Iinclude/asm/mach-default \
 	-DBCMEMBEDIMAGE="<dongle/rte/wl/builds/4325b0/sdio-g-cdc-reclaim-idsup-wme/rtecdc.h>" \
+
+ifeq ($(CONFIG_BRCM_LGE_WL_PKTFILTER),y)
+EXTRA_CFLAGS += -DPKT_FILTER_SUPPORT
+endif
+ifeq ($(CONFIG_BRCM_LGE_WL_ARPOFFLOAD),y)
+EXTRA_CFLAGS += -DARP_OFFLOAD_SUPPORT
+endif
+ifeq ($(CONFIG_BRCM_USE_SOFTAP),y)
+EXTRA_CFLAGS += -DSOFTAP
+endif
 
 ifeq ($(CONFIG_BCM4329_DEBUG),y)
 EXTRA_CFLAGS += -DDHD_DEBUG -DSDTEST -DSRCBASE="\"$(SRCROOT)\""
@@ -85,19 +94,12 @@ ifeq ($(CONFIG_BRCM_USE_STATIC_BUF),y)
 EXTRA_CFLAGS += -DDHD_USE_STATIC_BUF
 endif
 
-ifeq ($(CONFIG_BRCM_USE_SOFTAP),y)
-EXTRA_CFLAGS += -DSOFTAP
+ifeq ($(CONFIG_MMC_MSM),y)
+CONFIG_MMC_MSM7X00A = y
+EXTRA_CFLAGS += -DCONFIG_MMC_MSM7X00A=1
 endif
 
+ifeq ($(CONFIG_MMC_MSM7X00A),y)
 EXTRA_CFLAGS += -Dlinux
-EXTRA_CFLAGS += -DDHD_SDALIGN=32 -DMAX_HDR_READ=32 -DDHD_FIRSTREAD=32
-
-#ifeq ($(CONFIG_MMC_MSM),y)
-#CONFIG_MMC_MSM7X00A = y
-#EXTRA_CFLAGS += -DCONFIG_MMC_MSM7X00A=1
-#endif
-#
-#ifeq ($(CONFIG_MMC_MSM7X00A),y)
-#EXTRA_CFLAGS += -Dlinux
-#EXTRA_CFLAGS += -DDHD_SDALIGN=64 -DMAX_HDR_READ=64 -DDHD_FIRSTREAD=64
-#endif
+EXTRA_CFLAGS += -DDHD_SDALIGN=64 -DMAX_HDR_READ=64 -DDHD_FIRSTREAD=64
+endif

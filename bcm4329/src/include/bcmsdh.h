@@ -5,7 +5,7 @@
  *
  * Copyright (C) 1999-2010, Broadcom Corporation
  * 
- *         Unless you and Broadcom execute a separate written software license
+ *      Unless you and Broadcom execute a separate written software license
  * agreement governing use of this software, this software is licensed to you
  * under the terms of the GNU General Public License version 2 (the "GPL"),
  * available at http://www.broadcom.com/licenses/GPLv2.php, with the
@@ -23,7 +23,7 @@
  * software in any way with any other Broadcom software provided under a license
  * other than the GPL, without Broadcom's express prior written consent.
  *
- * $Id: bcmsdh.h,v 13.35.14.7.6.6.20.2.22.1 2010/08/26 21:39:25 Exp $
+ * $Id: bcmsdh.h,v 13.35.14.7.6.8 2009/10/14 04:22:25 Exp $
  */
 
 #ifndef	_bcmsdh_h_
@@ -157,9 +157,6 @@ extern int bcmsdh_start(void *sdh, int stage);
 /* Stop SDIO Host Controller communication */
 extern int bcmsdh_stop(void *sdh);
 
-/* Wait system lock free */
-extern int bcmsdh_waitlockfree(void *sdh);
-
 /* Returns the "Device ID" of target device on the SDIO bus. */
 extern int bcmsdh_query_device(void *sdh);
 
@@ -206,5 +203,6 @@ extern uint32 bcmsdh_cur_sbwad(void *sdh);
 
 /* Function to pass chipid and rev to lower layers for controlling pr's */
 extern void bcmsdh_chipinfo(void *sdh, uint32 chip, uint32 chiprev);
+
 
 #endif	/* _bcmsdh_h_ */

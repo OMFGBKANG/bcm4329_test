@@ -5,7 +5,7 @@
  *
  * Copyright (C) 1999-2010, Broadcom Corporation
  * 
- *         Unless you and Broadcom execute a separate written software license
+ *      Unless you and Broadcom execute a separate written software license
  * agreement governing use of this software, this software is licensed to you
  * under the terms of the GNU General Public License version 2 (the "GPL"),
  * available at http://www.broadcom.com/licenses/GPLv2.php, with the
@@ -22,7 +22,7 @@
  *      Notwithstanding the above, under no circumstances may you combine this
  * software in any way with any other Broadcom software provided under a license
  * other than the GPL, without Broadcom's express prior written consent.
- * $Id: bcmwifi.h,v 1.15.132.4.16.2 2010/06/07 21:32:42 Exp $
+ * $Id: bcmwifi.h,v 1.15.30.4 2010/03/10 20:10:52 Exp $
  */
 
 
@@ -84,14 +84,13 @@ typedef uint16 chanspec_t;
 					((channel) | (ctlsb) | WL_CHANSPEC_BW_40 | \
 					((channel) <= CH_MAX_2G_CHANNEL ? WL_CHANSPEC_BAND_2G : \
 					WL_CHANSPEC_BAND_5G))
-#define CHSPEC_CHANNEL(chspec)	((uint8)((chspec) & WL_CHANSPEC_CHAN_MASK))
-#define CHSPEC_BAND(chspec)	((chspec) & WL_CHANSPEC_BAND_MASK)
-
-#define CHSPEC_CTL_SB(chspec) (chspec & WL_CHANSPEC_CTL_SB_MASK)
-#define CHSPEC_BW(chspec)     (chspec & WL_CHANSPEC_BW_MASK)
+#define CHSPEC_CHANNEL(chspec)	((uint8)(chspec & WL_CHANSPEC_CHAN_MASK))
+#define CHSPEC_BAND(chspec)	(chspec & WL_CHANSPEC_BAND_MASK)
 
 #ifdef WL20MHZ_ONLY
 
+#define CHSPEC_CTL_SB(chspec)	WL_CHANSPEC_CTL_SB_NONE
+#define CHSPEC_BW(chspec)	WL_CHANSPEC_BW_20
 #define CHSPEC_IS10(chspec)	0
 #define CHSPEC_IS20(chspec)	1
 #ifndef CHSPEC_IS40
@@ -100,6 +99,8 @@ typedef uint16 chanspec_t;
 
 #else 
 
+#define CHSPEC_CTL_SB(chspec)	(chspec & WL_CHANSPEC_CTL_SB_MASK)
+#define CHSPEC_BW(chspec)	(chspec & WL_CHANSPEC_BW_MASK)
 #define CHSPEC_IS10(chspec)	((chspec & WL_CHANSPEC_BW_MASK) == WL_CHANSPEC_BW_10)
 #define CHSPEC_IS20(chspec)	((chspec & WL_CHANSPEC_BW_MASK) == WL_CHANSPEC_BW_20)
 #ifndef CHSPEC_IS40
@@ -108,27 +109,15 @@ typedef uint16 chanspec_t;
 
 #endif 
 
-
-#if defined(BAND5G)
-#if defined(BAND2G)
 #define CHSPEC_IS5G(chspec)	((chspec & WL_CHANSPEC_BAND_MASK) == WL_CHANSPEC_BAND_5G)
 #define CHSPEC_IS2G(chspec)	((chspec & WL_CHANSPEC_BAND_MASK) == WL_CHANSPEC_BAND_2G)
-#else
-#define CHSPEC_IS5G(chspec)	1
-#define CHSPEC_IS2G(chspec)	0
-#endif 
-#else
-#define CHSPEC_IS5G(chspec)	0
-#define CHSPEC_IS2G(chspec)	1
-#endif 
-
-
 #define CHSPEC_SB_NONE(chspec)	((chspec & WL_CHANSPEC_CTL_SB_MASK) == WL_CHANSPEC_CTL_SB_NONE)
 #define CHSPEC_SB_UPPER(chspec)	((chspec & WL_CHANSPEC_CTL_SB_MASK) == WL_CHANSPEC_CTL_SB_UPPER)
 #define CHSPEC_SB_LOWER(chspec)	((chspec & WL_CHANSPEC_CTL_SB_MASK) == WL_CHANSPEC_CTL_SB_LOWER)
 #define CHSPEC_CTL_CHAN(chspec)  ((CHSPEC_SB_LOWER(chspec)) ? \
 				  (LOWER_20_SB(((chspec) & WL_CHANSPEC_CHAN_MASK))) : \
 				  (UPPER_20_SB(((chspec) & WL_CHANSPEC_CHAN_MASK))))
+
 #define CHSPEC2WLC_BAND(chspec) (CHSPEC_IS5G((chspec))? WLC_BAND_5G: WLC_BAND_2G)
 
 #define CHANSPEC_STR_LEN    8
@@ -155,9 +144,6 @@ extern char * wf_chspec_ntoa(chanspec_t chspec, char *buf);
 
 
 extern chanspec_t wf_chspec_aton(char *a);
-
-
-extern chanspec_t wf_chspec_ctlchspec(chanspec_t chspec);
 
 
 extern int wf_mhz2channel(uint freq, uint start_factor);

@@ -66,10 +66,10 @@ config BRCM_USE_SOFTAP
 	---help---
 	   Using Softap feature.
 
-#config BCM4329_GPIO_WL_REGON
+# config BCM4329_GPIO_WL_REGON
 #	int "GPIO WL_REGON"
 #	default 21
-#	depends on BCM4329
+#	depends on LG_FW_BCM4329
 
 config BRCM_USE_STATIC_BUF
 	bool "Use static buff of osl_malloc"

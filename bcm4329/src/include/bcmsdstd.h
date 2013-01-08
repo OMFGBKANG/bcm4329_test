@@ -3,7 +3,7 @@
  *
  * Copyright (C) 1999-2010, Broadcom Corporation
  * 
- *         Unless you and Broadcom execute a separate written software license
+ *      Unless you and Broadcom execute a separate written software license
  * agreement governing use of this software, this software is licensed to you
  * under the terms of the GNU General Public License version 2 (the "GPL"),
  * available at http://www.broadcom.com/licenses/GPLv2.php, with the
@@ -21,7 +21,7 @@
  * software in any way with any other Broadcom software provided under a license
  * other than the GPL, without Broadcom's express prior written consent.
  *
- * $Id: bcmsdstd.h,v 13.16.18.1.16.2.68.1.20.1 2010/08/26 21:39:27 Exp $
+ * $Id: bcmsdstd.h,v 13.16.18.1.16.3 2009/12/10 01:09:23 Exp $
  */
 
 /* global msglevel for debug messages - bitvals come from sdiovar.h */
@@ -71,9 +71,7 @@ extern void sdstd_osfree(sdioh_info_t *sd);
 #define SDIOH_TYPE_JMICRON	6	/* JMicron Standard SDIO Host Controller */
 
 /* For linux, allow yielding for dongle */
-#if defined(BCMDONGLEHOST)
 #define BCMSDYIELD
-#endif
 
 /* Expected card status value for CMD7 */
 #define SDIOH_CMD7_EXP_STATUS   0x00001E00
@@ -220,7 +218,6 @@ extern void sdstd_free_irq(uint irq, sdioh_info_t *sd);
 /* OS-specific interrupt wrappers (atomic interrupt enable/disable) */
 extern void sdstd_lock(sdioh_info_t *sd);
 extern void sdstd_unlock(sdioh_info_t *sd);
-extern void sdstd_waitlockfree(sdioh_info_t *sd);
 
 /* OS-specific wait-for-interrupt-or-status */
 extern uint16 sdstd_waitbits(sdioh_info_t *sd, uint16 norm, uint16 err, bool yield);

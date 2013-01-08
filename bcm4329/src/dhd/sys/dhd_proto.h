@@ -6,7 +6,7 @@
  *
  * Copyright (C) 1999-2010, Broadcom Corporation
  * 
- *         Unless you and Broadcom execute a separate written software license
+ *      Unless you and Broadcom execute a separate written software license
  * agreement governing use of this software, this software is licensed to you
  * under the terms of the GNU General Public License version 2 (the "GPL"),
  * available at http://www.broadcom.com/licenses/GPLv2.php, with the
@@ -24,7 +24,7 @@
  * software in any way with any other Broadcom software provided under a license
  * other than the GPL, without Broadcom's express prior written consent.
  *
- * $Id: dhd_proto.h,v 1.2.82.1.4.1.16.5.20.3 2010/01/12 23:25:44 Exp $
+ * $Id: dhd_proto.h,v 1.2.82.1.4.1.16.7 2010/05/10 12:54:59 Exp $
  */
 
 #ifndef _dhd_proto_h_
@@ -35,6 +35,10 @@
 
 #ifndef IOCTL_RESP_TIMEOUT
 #define IOCTL_RESP_TIMEOUT  2000 /* In milli second */
+#endif
+
+#ifndef IOCTL_CHIP_ACTIVE_TIMEOUT
+#define IOCTL_CHIP_ACTIVE_TIMEOUT  10 /* In milli second */
 #endif
 
 /*
@@ -65,9 +69,6 @@ extern void dhd_prot_hdrpush(dhd_pub_t *, int ifidx, void *txp);
 /* Remove any protocol-specific data header. */
 extern int dhd_prot_hdrpull(dhd_pub_t *, int *ifidx, void *rxp);
 
-/* Remove any protocol-specific data header for tx side ---why is this being called by tx side? */
-extern int dhd_prot_hdrpull_txside(dhd_pub_t *dhd, int *ifidx, void *pktbuf);
-
 /* Use protocol to issue ioctl to dongle */
 extern int dhd_prot_ioctl(dhd_pub_t *dhd, int ifidx, wl_ioctl_t * ioc, void * buf, int len);
 
@@ -84,13 +85,6 @@ extern void dhd_prot_dstats(dhd_pub_t *dhdp);
 extern int dhd_ioctl(dhd_pub_t * dhd_pub, dhd_ioctl_t *ioc, void * buf, uint buflen);
 
 extern int dhd_preinit_ioctls(dhd_pub_t *dhd);
-
-#ifdef PROP_TXSTATUS
-extern int dhd_wlfc_enque_sendq(void* state, int prec, void* p);
-extern int dhd_wlfc_commit_packets(void* state, f_commitpkt_t fcommit, void* commit_ctx);
-extern void dhd_wlfc_cleanup(dhd_pub_t *dhd);
-
-#endif /* PROP_TXSTATUS */
 
 /********************************
  * For version-string expansion *

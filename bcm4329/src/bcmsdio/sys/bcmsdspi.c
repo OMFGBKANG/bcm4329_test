@@ -3,7 +3,7 @@
  *
  * Copyright (C) 1999-2010, Broadcom Corporation
  * 
- *         Unless you and Broadcom execute a separate written software license
+ *      Unless you and Broadcom execute a separate written software license
  * agreement governing use of this software, this software is licensed to you
  * under the terms of the GNU General Public License version 2 (the "GPL"),
  * available at http://www.broadcom.com/licenses/GPLv2.php, with the
@@ -21,7 +21,7 @@
  * software in any way with any other Broadcom software provided under a license
  * other than the GPL, without Broadcom's express prior written consent.
  *
- * $Id: bcmsdspi.c,v 1.14.4.2.4.4.6.4.20.1.22.1 2010/08/26 21:39:09 Exp $
+ * $Id: bcmsdspi.c,v 1.14.4.2.4.4.6.5 2010/03/10 03:09:48 Exp $
  */
 
 #include <typedefs.h>
@@ -704,12 +704,6 @@ sdioh_start(sdioh_info_t *sd, int stage)
 
 int
 sdioh_stop(sdioh_info_t *sd)
-{
-	return SUCCESS;
-}
-
-int
-sdioh_waitlockfree(sdioh_info_t *sd)
 {
 	return SUCCESS;
 }

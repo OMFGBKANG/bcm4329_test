@@ -4,7 +4,7 @@
 #
 # Copyright (C) 1999-2010, Broadcom Corporation
 # 
-#         Unless you and Broadcom execute a separate written software license
+#      Unless you and Broadcom execute a separate written software license
 # agreement governing use of this software, this software is licensed to you
 # under the terms of the GNU General Public License version 2 (the "GPL"),
 # available at http://www.broadcom.com/licenses/GPLv2.php, with the
@@ -22,7 +22,7 @@
 # software in any way with any other Broadcom software provided under a license
 # other than the GPL, without Broadcom's express prior written consent.
 #
-# $Id: Makerules,v 2.69.30.3.2.6.106.1 2010/05/11 17:53:09 Exp $
+# $Id: Makerules,v 2.69.30.3.2.6 2009/05/15 23:06:59 Exp $
 
 # first rule (default)
 all:
@@ -132,9 +132,8 @@ ifeq ($(TARGETOS), unix)
 	ifeq ($(TARGETENV), android)
 		TARGET_PREFIX = arm-eabi-
         	GCFLAGS += -Dlinux
-			GCFLAGS += -I/projects/hnd/tools/linux/hndtools-arm-eabi-4.2.1/android-ndk-r3/build/platforms/android-3/arch-arm/usr/include
-#        	GCFLAGS += -I/projects/hnd/tools/linux/hndtools-arm-eabi-4.2.1/arm-eabi/include/bionic/libc/include
-#        	GCFLAGS += -I/projects/hnd/tools/linux/hndtools-arm-eabi-4.2.1/arm-eabi/include/bionic/libc/arch-arm/include/
+        	GCFLAGS += -I/projects/hnd/tools/linux/hndtools-arm-eabi-4.2.1/arm-eabi/include/bionic/libc/include
+        	GCFLAGS += -I/projects/hnd/tools/linux/hndtools-arm-eabi-4.2.1/arm-eabi/include/bionic/libc/arch-arm/include/
         	GCFLAGS += -I/tools/linux/src/linux-2.6.25-01843-gfea26b0/include/
 	else
 	ifeq ($(TARGETENV), linuxarm_omap)

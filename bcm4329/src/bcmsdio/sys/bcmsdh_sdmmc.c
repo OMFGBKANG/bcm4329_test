@@ -3,7 +3,7 @@
  *
  * Copyright (C) 1999-2010, Broadcom Corporation
  * 
- *         Unless you and Broadcom execute a separate written software license
+ *      Unless you and Broadcom execute a separate written software license
  * agreement governing use of this software, this software is licensed to you
  * under the terms of the GNU General Public License version 2 (the "GPL"),
  * available at http://www.broadcom.com/licenses/GPLv2.php, with the
@@ -21,7 +21,7 @@
  * software in any way with any other Broadcom software provided under a license
  * other than the GPL, without Broadcom's express prior written consent.
  *
- * $Id: bcmsdh_sdmmc.c,v 1.1.2.5.6.18.4.6.2.3 2010/10/01 12:10:20 Exp $
+ * $Id: bcmsdh_sdmmc.c,v 1.1.2.5.6.29 2010/03/19 17:16:08 Exp $
  */
 #include <typedefs.h>
 
@@ -35,18 +35,20 @@
 #include <sdiovar.h>	/* ioctl/iovars */
 
 #include <linux/mmc/core.h>
+#if defined(CONFIG_LGE_BCM432X_PATCH)
 #include <linux/mmc/host.h>
 #include <linux/mmc/card.h>
+#endif	/* CONFIG_LGE_BCM432X_PATCH */
 #include <linux/mmc/sdio_func.h>
 #include <linux/mmc/sdio_ids.h>
 
 #include <dngl_stats.h>
 #include <dhd.h>
 
-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 27)) && 1 && defined(CONFIG_PM_SLEEP)
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 27)) && defined(CONFIG_PM_SLEEP)
 #include <linux/suspend.h>
 extern volatile bool dhd_mmc_suspend;
-#endif 
+#endif
 #include "bcmsdh_sdmmc.h"
 
 #ifndef BCMSDH_MODULE
@@ -234,9 +236,8 @@ sdioh_enable_func_intr(void)
 			return SDIOH_API_RC_FAIL;
 		}
 
-		reg |= 1 << 1;	/* enable function-1 interrupt */
-		reg |= 2 << 1;	/* enable function-2 interrupt */
-		reg |= 1;		/* Master interrupt enable */
+		/* Enable F1 and F2 interrupts, set master enable */
+		reg |= (INTR_CTL_FUNC1_EN | INTR_CTL_FUNC2_EN | INTR_CTL_MASTER_EN);
 
 		sdio_writeb(gInstance->func[0], reg, SDIOD_CCCR_INTEN, &err);
 		sdio_release_host(gInstance->func[0]);
@@ -265,8 +266,7 @@ sdioh_disable_func_intr(void)
 			return SDIOH_API_RC_FAIL;
 		}
 
-		reg &= ~(1 << 1);
-		reg &= ~(1 << 2);
+		reg &= ~(INTR_CTL_FUNC1_EN | INTR_CTL_FUNC2_EN);
 		/* Disable master interrupt with the last function interrupt */
 		if (!(reg & 0xFE))
 			reg = 0;
@@ -310,8 +310,7 @@ sdioh_interrupt_register(sdioh_info_t *sd, sdioh_cb_fn_t fn, void *argh)
 	}
 #elif defined(HW_OOB)
 	sdioh_enable_func_intr();
-#endif /* !defined(OOB_INTR_ONLY) */
-
+#endif /* defined(OOB_INTR_ONLY) */
 	return SDIOH_API_RC_SUCCESS;
 }
 
@@ -342,7 +341,6 @@ sdioh_interrupt_deregister(sdioh_info_t *sd)
 #elif defined(HW_OOB)
 	sdioh_disable_func_intr();
 #endif /*  !defined(OOB_INTR_ONLY) */
-
 	return SDIOH_API_RC_SUCCESS;
 }
 
@@ -685,7 +683,6 @@ sdioh_enable_hw_oob_intr(sdioh_info_t *sd, bool enable)
 		data = 3;	/* enable hw oob interrupt */
 	else
 		data = 4;	/* disable hw oob interrupt */
-	data |= 4;		/* Active HIGH */
 
 	status = sdioh_request_byte(sd, SDIOH_WRITE, 0, 0xf2, &data);
 	return status;
@@ -804,10 +801,15 @@ sdioh_request_byte(sdioh_info_t *sd, uint rw, uint func, uint regaddr, uint8 *by
 			/* to allow abort command through F1 */
 			else if (regaddr == SDIOD_CCCR_IOABORT) {
 				sdio_claim_host(gInstance->func[func]);
+				/*
+				* this sdio_f0_writeb() can be replaced with another api
+				* depending upon MMC driver change.
+				* As of this time, this is temporaray one
+				*/
 				sdio_writeb(gInstance->func[func], *byte, regaddr, &err_ret);
 				sdio_release_host(gInstance->func[func]);
 			}
-#endif
+#endif /* MMC_SDIO_ABORT */
 			else if (regaddr < 0xF0) {
 				sd_err(("bcmsdh_sdmmc: F0 Wr:0x%02x: write disallowed\n", regaddr));
 			} else {
@@ -1047,7 +1049,6 @@ sdioh_request_buffer(sdioh_info_t *sd, uint pio_dma, uint fix_inc, uint write, u
 #ifdef DHD_USE_STATIC_BUF
 		PKTFREE_STATIC(sd->osh, mypkt, write ? TRUE : FALSE);
 #else
-
 		PKTFREE(sd->osh, mypkt, write ? TRUE : FALSE);
 #endif /* DHD_USE_STATIC_BUF */
 	} else if (((uint32)(PKTDATA(sd->osh, pkt)) & DMA_ALIGN_MASK) != 0) {
@@ -1097,7 +1098,6 @@ sdioh_request_buffer(sdioh_info_t *sd, uint pio_dma, uint fix_inc, uint write, u
 #ifdef DHD_USE_STATIC_BUF
 		PKTFREE_STATIC(sd->osh, mypkt, write ? TRUE : FALSE);
 #else
-
 		PKTFREE(sd->osh, mypkt, write ? TRUE : FALSE);
 #endif /* DHD_USE_STATIC_BUF */
 	} else { /* case 3: We have a packet and it is aligned. */
@@ -1109,25 +1109,15 @@ sdioh_request_buffer(sdioh_info_t *sd, uint pio_dma, uint fix_inc, uint write, u
 	return (Status);
 }
 
-/* this function performs "abort" for both of host & device */
-static int
-sdmmc_abort(sdioh_info_t *sd, uint func)
-{
-	sd_trace(("%s: Enter\n", __FUNCTION__));
-#if defined(MMC_SDIO_ABORT)
-	/* issue abort cmd52 command through F1 */
-	sdioh_request_byte(sd, SD_IO_OP_WRITE, SDIO_FUNC_0, SDIOD_CCCR_IOABORT, (uint8 *)&func);
-#endif /* MMC_SDIO_ABORT */
-	sd_trace(("%s: Exit\n", __FUNCTION__));
-	return SDIOH_API_RC_SUCCESS;
-}
-
 extern int
 sdioh_abort(sdioh_info_t *sd, uint func)
 {
 	sd_trace(("%s: Enter\n", __FUNCTION__));
 
-	sdmmc_abort(sd, func);
+#if defined(MMC_SDIO_ABORT)
+	/* issue abort cmd52 command through F1 */
+	sdioh_request_byte(sd, SD_IO_OP_WRITE, SDIO_FUNC_0, SDIOD_CCCR_IOABORT, (uint8 *)&func);
+#endif /* defined(MMC_SDIO_ABORT) */
 
 	sd_trace(("%s: Exit\n", __FUNCTION__));
 	return SDIOH_API_RC_SUCCESS;
@@ -1145,12 +1135,12 @@ int sdioh_sdio_reset(sdioh_info_t *si)
 void
 sdioh_sdmmc_devintr_off(sdioh_info_t *sd)
 {
-#if defined(CONFIG_LGE_BCM432X_PATCH) && defined(CONFIG_BRCM_LGE_WL_HOSTWAKEUP)
+#if defined(CONFIG_LGE_BCM432X_PATCH)
 	struct mmc_card *card = gInstance->func[0]->card;
 	struct mmc_host *host = card->host;
 
 	host->ops->enable_sdio_irq(host, 0);
-#endif	/* defined(CONFIG_LGE_BCM432X_PATCH) && defined(CONFIG_BRCM_LGE_WL_HOSTWAKEUP) */
+#endif	/* CONFIG_LGE_BCM432X_PATCH */
 	sd_trace(("%s: %d\n", __FUNCTION__, sd->use_client_ints));
 	sd->intmask &= ~CLIENT_INTR;
 }
@@ -1159,17 +1149,16 @@ sdioh_sdmmc_devintr_off(sdioh_info_t *sd)
 void
 sdioh_sdmmc_devintr_on(sdioh_info_t *sd)
 {
-#if defined(CONFIG_LGE_BCM432X_PATCH) && defined(CONFIG_BRCM_LGE_WL_HOSTWAKEUP)
+#if defined(CONFIG_LGE_BCM432X_PATCH)
 	struct mmc_card *card = gInstance->func[0]->card;
 	struct mmc_host *host = card->host;
-#endif	/* defined(CONFIG_LGE_BCM432X_PATCH) && defined(CONFIG_BRCM_LGE_WL_HOSTWAKEUP) */
+#endif	/* CONFIG_LGE_BCM432X_PATCH */
 	sd_trace(("%s: %d\n", __FUNCTION__, sd->use_client_ints));
 	sd->intmask |= CLIENT_INTR;
-#if defined(CONFIG_LGE_BCM432X_PATCH) && defined(CONFIG_BRCM_LGE_WL_HOSTWAKEUP)
+#if defined(CONFIG_LGE_BCM432X_PATCH)
 	host->ops->enable_sdio_irq(host, 1);
-#endif	/* defined(CONFIG_LGE_BCM432X_PATCH) && defined(CONFIG_BRCM_LGE_WL_HOSTWAKEUP) */
+#endif	/* CONFIG_LGE_BCM432X_PATCH */
 }
-
 
 /* Read client card reg */
 int
@@ -1326,12 +1315,12 @@ sdioh_start(sdioh_info_t *si, int stage)
 			sdio_claim_irq(gInstance->func[2], IRQHandlerF2);
 			sdio_claim_irq(gInstance->func[1], IRQHandler);
 			sdio_release_host(gInstance->func[0]);
-#else
+#else /* defined(OOB_INTR_ONLY) */
 #if defined(HW_OOB)
 			sdioh_enable_func_intr();
 #endif
 			bcmsdh_oob_intr_set(TRUE);
-#endif	/* !defined(OOB_INTR_ONLY) */
+#endif /* !defined(OOB_INTR_ONLY) */
 		}
 	}
 	else
@@ -1355,7 +1344,7 @@ sdioh_stop(sdioh_info_t *si)
 		sdio_release_irq(gInstance->func[1]);
 		sdio_release_irq(gInstance->func[2]);
 		sdio_release_host(gInstance->func[0]);
-#else
+#else /* defined(OOB_INTR_ONLY) */
 #if defined(HW_OOB)
 		sdioh_disable_func_intr();
 #endif
@@ -1365,10 +1354,4 @@ sdioh_stop(sdioh_info_t *si)
 	else
 		sd_err(("%s Failed\n", __FUNCTION__));
 	return (0);
-}
-
-int
-sdioh_waitlockfree(sdioh_info_t *sd)
-{
-	return (1);
 }

@@ -4,7 +4,7 @@
  *
  * Copyright (C) 1999-2010, Broadcom Corporation
  * 
- *         Unless you and Broadcom execute a separate written software license
+ *      Unless you and Broadcom execute a separate written software license
  * agreement governing use of this software, this software is licensed to you
  * under the terms of the GNU General Public License version 2 (the "GPL"),
  * available at http://www.broadcom.com/licenses/GPLv2.php, with the
@@ -22,7 +22,7 @@
  * software in any way with any other Broadcom software provided under a license
  * other than the GPL, without Broadcom's express prior written consent.
  *
- * $Id: siutils.h,v 13.197.4.2.4.3.8.7.20.5.2.1 2010/06/23 17:02:05 Exp $
+ * $Id: siutils.h,v 13.197.4.2.4.3.8.15 2010/04/19 05:21:30 Exp $
  */
 
 
@@ -209,34 +209,6 @@ extern int si_corepciid(si_t *sih, uint func, uint16 *pcivendor, uint16 *pcidevi
 #define si_eci_init(sih) (0)
 #define si_eci_notify_bt(sih, type, val, interrupt)  (0)
 
-#if !defined(BCMDONGLEHOST)
-
-extern bool si_is_otp_disabled(si_t *sih);
-extern bool si_is_otp_powered(si_t *sih);
-extern void si_otp_power(si_t *sih, bool on);
-
-
-extern bool si_is_sprom_available(si_t *sih);
-extern bool si_is_sprom_enabled(si_t *sih);
-extern void si_sprom_enable(si_t *sih, bool enable);
-
-
-extern int si_cis_source(si_t *sih);
-#define CIS_DEFAULT	0
-#define CIS_SROM	1
-#define CIS_OTP		2
-
-
-#define	DEFAULT_FAB	0x0	
-#define	CSM_FAB7	0x1	
-#define	TSMC_FAB12	0x2	
-#define	SMIC_FAB4	0x3	
-extern int si_otp_fabid(si_t *sih, uint16 *fabid, bool rw);
-
-
-extern int si_otp_moduleid(si_t *sih);
-
-#endif 
 
 
 extern int si_devpath(si_t *sih, char *path, int size);
@@ -253,10 +225,6 @@ extern void si_pci_up(si_t *sih);
 extern void si_pcie_war_ovr_disable(si_t *sih);
 extern void si_pcie_extendL1timer(si_t *sih, bool extend);
 extern int si_pci_fixcfg(si_t *sih);
-#ifndef BCMDONGLEHOST
-extern bool si_ldo_war(si_t *sih, uint devid);
-#endif
-void si_pmu_res_4319_swctrl_war(si_t *sih, osl_t *osh, bool enable);
 
 
 

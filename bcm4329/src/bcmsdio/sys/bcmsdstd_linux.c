@@ -3,7 +3,7 @@
  *
  * Copyright (C) 1999-2010, Broadcom Corporation
  * 
- *         Unless you and Broadcom execute a separate written software license
+ *      Unless you and Broadcom execute a separate written software license
  * agreement governing use of this software, this software is licensed to you
  * under the terms of the GNU General Public License version 2 (the "GPL"),
  * available at http://www.broadcom.com/licenses/GPLv2.php, with the
@@ -21,7 +21,7 @@
  * software in any way with any other Broadcom software provided under a license
  * other than the GPL, without Broadcom's express prior written consent.
  *
- * $Id: bcmsdstd_linux.c,v 1.11.18.2.236.2 2010/08/31 00:27:07 Exp $
+ * $Id: bcmsdstd_linux.c,v 1.11.18.2 2008/05/28 18:36:56 Exp $
  */
 
 #include <typedefs.h>
@@ -178,7 +178,6 @@ sdstd_lock(sdioh_info_t *sd)
 {
 	ulong flags;
 	struct sdos_info *sdos;
-	int    wait_count = 0;
 
 	sdos = (struct sdos_info *)sd->sdos_info;
 	ASSERT(sdos);
@@ -186,17 +185,10 @@ sdstd_lock(sdioh_info_t *sd)
 	sd_trace(("%s: %d\n", __FUNCTION__, sd->lockcount));
 
 	spin_lock_irqsave(&sdos->lock, flags);
-	while (sd->lockcount)
-	{
-	    spin_unlock_irqrestore(&sdos->lock, flags);
-	    yield();
-		spin_lock_irqsave(&sdos->lock, flags);
-		if (++wait_count == 10000) {
+	if (sd->lockcount) {
+		sd_err(("%s: Already locked!\n", __FUNCTION__));
 		ASSERT(sd->lockcount == 0);
 	}
-	}
-	if (wait_count)
-		printk("sdstd_lock: wait count = %d\n", wait_count);
 	sdstd_devintr_off(sd);
 	sd->lockcount++;
 	spin_unlock_irqrestore(&sdos->lock, flags);
@@ -221,19 +213,6 @@ sdstd_unlock(sdioh_info_t *sd)
 	}
 	spin_unlock_irqrestore(&sdos->lock, flags);
 }
-
-void
-sdstd_waitlockfree(sdioh_info_t *sd)
-{
-	if (sd->lockcount) {
-		printk("wait lock free\n");
-		while (sd->lockcount)
-		{
-		    yield();
-		}
-	}
-}
-
 
 uint16
 sdstd_waitbits(sdioh_info_t *sd, uint16 norm, uint16 err, bool yield)

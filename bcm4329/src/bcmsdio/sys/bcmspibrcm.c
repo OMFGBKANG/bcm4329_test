@@ -1,7 +1,7 @@
 /*
  * Broadcom BCMSDH to gSPI Protocol Conversion Layer
  *
- * Copyright (C) 2010, Broadcom Corporation
+ * Copyright (C) 2009, Broadcom Corporation
  * All Rights Reserved.
  * 
  * This is UNPUBLISHED PROPRIETARY SOURCE CODE of Broadcom Corporation;
@@ -9,13 +9,10 @@
  * or duplicated in any form, in whole or in part, without the prior
  * written permission of Broadcom Corporation.
  *
- * $Id: bcmspibrcm.c,v 1.11.2.10.2.9.6.11.100.2 2010/08/26 21:39:10 Exp $
+ * $Id: bcmspibrcm.c,v 1.11.2.10.2.9.6.11 2009/05/21 13:21:57 Exp $
  */
 
-#ifdef  BCMDONGLEHOST
 #define HSMODE
-#else
-#endif /* BCMDONGLEHOST */
 
 #include <typedefs.h>
 
@@ -59,7 +56,6 @@ uint sd_divisor = 2;
 uint sd_power = 1;		/* Default to SD Slot powered ON */
 uint sd_clock = 1;		/* Default to SD Clock turned ON */
 uint sd_crc = 0;		/* Default to SPI CRC Check turned OFF */
-uint sd_pci_slot = 0xFFFFffff;	/* Used to force selection of a particular PCI slot */
 
 uint8	spi_outbuf[SPI_MAX_PKT_LEN];
 uint8	spi_inbuf[SPI_MAX_PKT_LEN];
@@ -943,11 +939,6 @@ sdioh_stop(sdioh_info_t *sd)
 	return SUCCESS;
 }
 
-int
-sdioh_waitlockfree(sdioh_info_t *sd)
-{
-	return SUCCESS;
-}
 
 
 /*
@@ -1056,11 +1047,6 @@ bcmspi_client_init(sdioh_info_t *sd)
 	}
 #endif /* HSMODE */
 
-#ifndef  BCMDONGLEHOST
-	if ((status = bcmspi_card_regwrite(sd, 1, SBSDIO_FUNC1_SBADDRLOW, 4,
-	    SB_ENUM_BASE >> 8)) != SUCCESS)
-		return FALSE;
-#endif
 	sd->card_init_done = TRUE;
 
 

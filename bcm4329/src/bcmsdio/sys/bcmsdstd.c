@@ -3,7 +3,7 @@
  *
  * Copyright (C) 1999-2010, Broadcom Corporation
  * 
- *         Unless you and Broadcom execute a separate written software license
+ *      Unless you and Broadcom execute a separate written software license
  * agreement governing use of this software, this software is licensed to you
  * under the terms of the GNU General Public License version 2 (the "GPL"),
  * available at http://www.broadcom.com/licenses/GPLv2.php, with the
@@ -21,7 +21,7 @@
  * software in any way with any other Broadcom software provided under a license
  * other than the GPL, without Broadcom's express prior written consent.
  *
- * $Id: bcmsdstd.c,v 1.64.4.1.4.4.2.10.4.7.10.1 2010/08/26 21:38:39 Exp $
+ * $Id: bcmsdstd.c,v 1.64.4.1.4.4.2.17 2010/03/10 03:09:48 Exp $
  */
 
 #include <typedefs.h>
@@ -59,8 +59,8 @@ uint sd_divisor = 2;			/* Default 48MHz/2 = 24MHz */
 
 uint sd_power = 1;		/* Default to SD Slot powered ON */
 uint sd_clock = 1;		/* Default to SD Clock turned ON */
-uint8 sd_dma_mode = DMA_MODE_SDMA; /* Default to SDMA for now */
 uint sd_pci_slot = 0xFFFFffff; /* Used to force selection of a particular PCI slot */
+uint8 sd_dma_mode = DMA_MODE_SDMA; /* Default to SDMA for now */
 
 uint sd_toctl = 7;
 
@@ -1124,13 +1124,6 @@ sdioh_start(sdioh_info_t *sd, int stage)
 int
 sdioh_stop(sdioh_info_t *sd)
 {
-	return SUCCESS;
-}
-
-int
-sdioh_waitlockfree(sdioh_info_t *sd)
-{
-	sdstd_waitlockfree(sd);
 	return SUCCESS;
 }
 

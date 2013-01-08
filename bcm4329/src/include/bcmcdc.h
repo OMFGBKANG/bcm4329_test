@@ -6,7 +6,7 @@
  *
  * Copyright (C) 1999-2010, Broadcom Corporation
  * 
- *         Unless you and Broadcom execute a separate written software license
+ *      Unless you and Broadcom execute a separate written software license
  * agreement governing use of this software, this software is licensed to you
  * under the terms of the GNU General Public License version 2 (the "GPL"),
  * available at http://www.broadcom.com/licenses/GPLv2.php, with the
@@ -24,7 +24,7 @@
  * software in any way with any other Broadcom software provided under a license
  * other than the GPL, without Broadcom's express prior written consent.
  *
- * $Id: bcmcdc.h,v 13.14.16.3.16.4.20.3.20.1 2010/04/25 22:22:01 Exp $
+ * $Id: bcmcdc.h,v 13.14.16.3.16.4 2009/04/12 16:58:45 Exp $
  */
 #include <proto/ethernet.h>
 
@@ -48,11 +48,6 @@ typedef struct cdc_ioctl {
 /* CDC flag definitions */
 #define CDCF_IOC_ERROR		0x01	/* 0=success, 1=ioctl cmd failed */
 #define CDCF_IOC_SET		0x02	/* 0=get, 1=set cmd */
-#define CDCF_IOC_OVL_IDX_MASK	0x3c	/* overlay region index mask */
-#define CDCF_IOC_OVL_RSV	0x40	/* 1=reserve this overlay region */
-#define CDCF_IOC_OVL		0x80	/* 1=this ioctl corresponds to an overlay */
-#define CDCF_IOC_ACTION_MASK	0xfe	/* SET/GET, OVL_IDX, OVL_RSV, OVL mask */
-#define CDCF_IOC_ACTION_SHIFT	1	/* SET/GET, OVL_IDX, OVL_RSV, OVL shift */
 #define CDCF_IOC_IF_MASK	0xF000	/* I/F index */
 #define CDCF_IOC_IF_SHIFT	12
 #define CDCF_IOC_ID_MASK	0xFFFF0000	/* used to uniquely id an ioctl req/resp pairing */
@@ -74,8 +69,7 @@ typedef struct cdc_ioctl {
 
 #define	BDC_HEADER_LEN		4
 
-#define BDC_PROTO_VER_1		1	/* Protocol version */
-#define BDC_PROTO_VER		2	/* Protocol version */
+#define BDC_PROTO_VER		1	/* Protocol version */
 
 #define BDC_FLAG_VER_MASK	0xf0	/* Protocol version mask */
 #define BDC_FLAG_VER_SHIFT	4	/* Protocol version shift */
@@ -102,5 +96,5 @@ struct bdc_header {
 	uint8	flags;			/* Flags */
 	uint8	priority;	/* 802.1d Priority 0:2 bits, 4:7 flow control info for usb */
 	uint8	flags2;
-	uint8	dataOffset;
+	uint8	rssi;
 };

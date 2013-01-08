@@ -4,7 +4,7 @@
  *
  * Copyright (C) 1999-2010, Broadcom Corporation
  * 
- *         Unless you and Broadcom execute a separate written software license
+ *      Unless you and Broadcom execute a separate written software license
  * agreement governing use of this software, this software is licensed to you
  * under the terms of the GNU General Public License version 2 (the "GPL"),
  * available at http://www.broadcom.com/licenses/GPLv2.php, with the
@@ -22,7 +22,7 @@
  * software in any way with any other Broadcom software provided under a license
  * other than the GPL, without Broadcom's express prior written consent.
  *
- * $Id: bcmsdpcm.h,v 1.1.2.3.20.1.2.1 2010/06/25 03:39:43 Exp $
+ * $Id: bcmsdpcm.h,v 1.1.2.3 2009/04/09 18:52:06 Exp $
  */
 
 #ifndef	_bcmsdpcm_h_
@@ -67,11 +67,10 @@
 #define HMB_MASK	0x0000000f	/* To Host Mailbox Mask */
 
 /* tohostmailboxdata */
-#define HMB_DATA_NAKHANDLED	0x01	/* we're ready to retransmit NAK'd frame to host */
-#define HMB_DATA_DEVREADY	0x02	/* we're ready to to talk to host after enable */
-#define HMB_DATA_FC		0x04	/* per prio flowcontrol update flag to host */
-#define HMB_DATA_FWREADY	0x08	/* firmware is ready for protocol activity */
-#define HMB_DATA_FWHALT		0x10	/* firmware has halted operation */
+#define HMB_DATA_NAKHANDLED	1	/* we're ready to retransmit NAK'd frame to host */
+#define HMB_DATA_DEVREADY	2	/* we're ready to to talk to host after enable */
+#define HMB_DATA_FC		4	/* per prio flowcontrol update flag to host */
+#define HMB_DATA_FWREADY	8	/* firmware is ready for protocol activity */
 
 #define HMB_DATA_FCDATA_MASK	0xff000000	/* per prio flowcontrol data */
 #define HMB_DATA_FCDATA_SHIFT	24		/* per prio flowcontrol data */
@@ -242,7 +241,7 @@ typedef volatile struct {
  * Shared structure between dongle and the host
  * The structure contains pointers to trap or assert information shared with the host
  */
-#define SDPCM_SHARED_VERSION       0x0002
+#define SDPCM_SHARED_VERSION       0x0001
 #define SDPCM_SHARED_VERSION_MASK  0x00FF
 #define SDPCM_SHARED_ASSERT_BUILT  0x0100
 #define SDPCM_SHARED_ASSERT        0x0200
@@ -256,12 +255,8 @@ typedef struct {
 	uint32  assert_line;
 	uint32	console_addr;		/* Address of hndrte_cons_t */
 	uint32  msgtrace_addr;
-	uint8   tag[32];
 } sdpcm_shared_t;
 
 extern sdpcm_shared_t sdpcm_shared;
-
-/* Function can be used to notify host of FW halt */
-extern void sdpcmd_fwhalt(void);
 
 #endif	/* _bcmsdpcm_h_ */

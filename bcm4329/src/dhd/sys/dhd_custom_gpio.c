@@ -2,7 +2,7 @@
 * Customer code to add GPIO control during WLAN start/stop
 * Copyright (C) 1999-2010, Broadcom Corporation
 * 
-*         Unless you and Broadcom execute a separate written software license
+*      Unless you and Broadcom execute a separate written software license
 * agreement governing use of this software, this software is licensed to you
 * under the terms of the GNU General Public License version 2 (the "GPL"),
 * available at http://www.broadcom.com/licenses/GPLv2.php, with the
@@ -20,7 +20,7 @@
 * software in any way with any other Broadcom software provided under a license
 * other than the GPL, without Broadcom's express prior written consent.
 *
-* $Id: dhd_custom_gpio.c,v 1.1.4.2.20.4.2.1 2010/10/01 12:12:41 Exp $
+* $Id: dhd_custom_gpio.c,v 1.1.4.7 2010/06/03 21:27:48 Exp $
 */
 
 
@@ -29,12 +29,8 @@
 #include <osl.h>
 #include <bcmutils.h>
 
-#ifndef BCMDONGLEHOST
-#include <wlc_cfg.h>
-#else
 #include <dngl_stats.h>
 #include <dhd.h>
-#endif
 
 #include <wlioctl.h>
 #include <wl_iw.h>
@@ -46,13 +42,8 @@
 #endif /* CONFIG_LGE_BCM432X_PATCH */
 /* LGE_CHANGE_E [yoohoo@lge.com] 2009-05-14, support start/stop */
 
-#ifndef BCMDONGLEHOST
-#include <wlc_pub.h>
-#include <wl_dbg.h>
-#else
 #define WL_ERROR(x) printf x
 #define WL_TRACE(x)
-#endif
 
 #ifdef CUSTOMER_HW
 extern  void bcm_wlan_power_off(int);
@@ -69,6 +60,7 @@ int wifi_get_irq_number(unsigned long *irq_flags_ptr);
 #if defined(BCMLXSDMMC)
 extern int sdioh_mmc_irq(int irq);
 #endif /* (BCMLXSDMMC)  */
+
 #ifdef CUSTOMER_HW3
 #include <mach/gpio.h>
 #endif
@@ -92,10 +84,10 @@ int dhd_customer_oob_irq_map(unsigned long *irq_flags_ptr)
 		dhd_oob_gpio_num = CUSTOM_OOB_GPIO_NUM;
 	}
 #endif
-
+	*irq_flags_ptr = IRQF_TRIGGER_FALLING;
 	if (dhd_oob_gpio_num < 0) {
 		WL_ERROR(("%s: ERROR customer specific Host GPIO is NOT defined \n",
-		__FUNCTION__));
+			__FUNCTION__));
 		return (dhd_oob_gpio_num);
 	}
 
@@ -108,7 +100,7 @@ int dhd_customer_oob_irq_map(unsigned long *irq_flags_ptr)
 	gpio_request(dhd_oob_gpio_num, "oob irq");
 	host_oob_irq = gpio_to_irq(dhd_oob_gpio_num);
 	gpio_direction_input(dhd_oob_gpio_num);
-#endif
+#endif /* CUSTOMER_HW */
 #endif /* CUSTOMER_HW2 */
 
 	return (host_oob_irq);
@@ -132,20 +124,19 @@ dhd_customer_gpio_wlan_ctrl(int onoff)
 			WL_ERROR(("=========== WLAN placed in RESET ========\n"));
 /* LGE_CHANGE_S [yoohoo@lge.com] 2009-05-14, support start/stop */
 #if defined(CONFIG_LGE_BCM432X_PATCH)
-            if (gpio_get_value(CONFIG_BCM4329_GPIO_WL_RESET)) {
-                disable_irq(gpio_to_irq(CONFIG_BCM4329_GPIO_WL_RESET));
-                gpio_set_value(CONFIG_BCM4329_GPIO_WL_RESET, 0);
-            }
+			if (gpio_get_value(CONFIG_BCM4329_GPIO_WL_RESET)) {
+				disable_irq(gpio_to_irq(CONFIG_BCM4329_GPIO_WL_RESET));
+				gpio_set_value(CONFIG_BCM4329_GPIO_WL_RESET, 0);
+			}
 /* LGE_CHANGE_S [yoohoo@lge.com] 2009-07-02, add BCM4329_GPIO_WL_REGON on /off when "DRIVER START/STOP */
 #ifdef CONFIG_BCM4329_GPIO_WL_REGON
-            if (!gpio_get_value(CONFIG_BCM4329_GPIO_BT_RESET)) {
-                gpio_set_value(CONFIG_BCM4329_GPIO_WL_REGON, 0);
-            }
+			if (!gpio_get_value(CONFIG_BCM4329_GPIO_BT_RESET)) {
+				gpio_set_value(CONFIG_BCM4329_GPIO_WL_REGON, 0);
+			}
 #endif /* CONFIG_BCM4329_GPIO_WL_REGON */
 /* LGE_CHANGE_E [yoohoo@lge.com] 2009-07-02, add BCM4329_GPIO_WL_REGON on /off when "DRIVER START/STOP */
 #endif /* CONFIG_LGE_BCM432X_PATCH */
 /* LGE_CHANGE_E [yoohoo@lge.com] 2009-05-14, support start/stop */
-
 		break;
 
 		case WLAN_RESET_ON:
@@ -162,22 +153,21 @@ dhd_customer_gpio_wlan_ctrl(int onoff)
 #if defined(CONFIG_LGE_BCM432X_PATCH)
 /* LGE_CHANGE_S [yoohoo@lge.com] 2009-07-02, add BCM4329_GPIO_WL_REGON on /off when "DRIVER START/STOP */
 #ifdef CONFIG_BCM4329_GPIO_WL_REGON
-            if (!gpio_get_value(CONFIG_BCM4329_GPIO_WL_REGON)) {
-                gpio_set_value(CONFIG_BCM4329_GPIO_WL_REGON, 1);
-                mdelay(150);
-            }
+			if (!gpio_get_value(CONFIG_BCM4329_GPIO_WL_REGON)) { 
+				gpio_set_value(CONFIG_BCM4329_GPIO_WL_REGON, 1);
+				mdelay(150);
+			}
 #endif /* CONFIG_BCM4329_GPIO_WL_REGON */
 /* LGE_CHANGE_E [yoohoo@lge.com] 2009-07-02, add BCM4329_GPIO_WL_REGON on /off when "DRIVER START/STOP */
-            if (!gpio_get_value(CONFIG_BCM4329_GPIO_WL_RESET)) {
-                gpio_set_value(CONFIG_BCM4329_GPIO_WL_RESET, 1);
+			if (!gpio_get_value(CONFIG_BCM4329_GPIO_WL_RESET)) { 
+				gpio_set_value(CONFIG_BCM4329_GPIO_WL_RESET, 1);
 #ifndef CONFIG_BCM4329_GPIO_WL_REGON
-                mdelay(150);
+				mdelay(150);
 #endif /* CONFIG_BCM4329_GPIO_WL_REGON */
-                enable_irq(gpio_to_irq(CONFIG_BCM4329_GPIO_WL_RESET));
-            }
+				enable_irq(gpio_to_irq(CONFIG_BCM4329_GPIO_WL_RESET));
+			}
 #endif /* CONFIG_LGE_BCM432X_PATCH */
 /* LGE_CHANGE_E [yoohoo@lge.com] 2009-05-14, support start/stop */
-
 		break;
 
 		case WLAN_POWER_OFF:
@@ -199,3 +189,26 @@ dhd_customer_gpio_wlan_ctrl(int onoff)
 		break;
 	}
 }
+
+#ifdef GET_CUSTOM_MAC_ENABLE
+/* Function to get custom MAC address */
+int
+dhd_custom_get_mac_address(unsigned char *buf)
+{
+	WL_TRACE(("%s Enter\n", __FUNCTION__));
+	if (!buf)
+		return -EINVAL;
+
+	/* Customer access to MAC address stored outside of DHD driver */
+
+#ifdef EXAMPLE_GET_MAC
+	/* EXAMPLE code */
+	{
+		struct ether_addr ea_example = {{0x00, 0x11, 0x22, 0x33, 0x44, 0xFF}};
+		bcopy((char *)&ea_example, buf, sizeof(struct ether_addr));
+	}
+#endif /* EXAMPLE_GET_MAC */
+
+	return 0;
+}
+#endif /* GET_CUSTOM_MAC_ENABLE */

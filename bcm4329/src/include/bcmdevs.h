@@ -3,7 +3,7 @@
  *
  * Copyright (C) 1999-2010, Broadcom Corporation
  * 
- *         Unless you and Broadcom execute a separate written software license
+ *      Unless you and Broadcom execute a separate written software license
  * agreement governing use of this software, this software is licensed to you
  * under the terms of the GNU General Public License version 2 (the "GPL"),
  * available at http://www.broadcom.com/licenses/GPLv2.php, with the
@@ -21,7 +21,7 @@
  * software in any way with any other Broadcom software provided under a license
  * other than the GPL, without Broadcom's express prior written consent.
  *
- * $Id: bcmdevs.h,v 13.172.4.5.4.10.2.13.4.10.2.3 2010/10/11 15:01:03 Exp $
+ * $Id: bcmdevs.h,v 13.172.4.5.4.10.2.36 2010/05/25 08:33:44 Exp $
  */
 
 
@@ -58,6 +58,7 @@
 #define BCM4329_D11NDUAL_ID	0x432e		
 #define BCM4329_D11N2G_ID	0x432f		
 #define BCM4329_D11N5G_ID	0x4330		
+#define BCM4336_D11N_ID		0x4343		
 #define	BCM4315_D11DUAL_ID	0x4334		
 #define	BCM4315_D11G_ID		0x4335		
 #define	BCM4315_D11A_ID		0x4336		
@@ -90,6 +91,7 @@
 #define	BCM4325_CHIP_ID		0x4325		
 #define	BCM4328_CHIP_ID		0x4328		
 #define	BCM4329_CHIP_ID		0x4329		
+#define BCM4336_CHIP_ID		0x4336		
 #define	BCM4402_CHIP_ID		0x4402		
 #define	BCM4704_CHIP_ID		0x4704		
 #define	BCM4710_CHIP_ID		0x4710		
@@ -118,11 +120,5 @@
 #define HDLSIM_PKG_ID		14		
 #define HWSIM_PKG_ID		15		
 
-
-
-#define RDL_RAM_BASE_4319 0x60000000
-#define RDL_RAM_BASE_4329 0x60000000
-#define RAM_SIZE_4319 0x48000
-#define RAM_SIZE_4329  0x48000
 
 #endif 

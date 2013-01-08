@@ -3,7 +3,7 @@
  *
  * Copyright (C) 1999-2010, Broadcom Corporation
  * 
- *         Unless you and Broadcom execute a separate written software license
+ *      Unless you and Broadcom execute a separate written software license
  * agreement governing use of this software, this software is licensed to you
  * under the terms of the GNU General Public License version 2 (the "GPL"),
  * available at http://www.broadcom.com/licenses/GPLv2.php, with the
@@ -20,7 +20,7 @@
  *      Notwithstanding the above, under no circumstances may you combine this
  * software in any way with any other Broadcom software provided under a license
  * other than the GPL, without Broadcom's express prior written consent.
- * $Id: bcmutils.h,v 13.184.4.6.2.1.18.15.2.19.2.3 2010/06/30 03:10:09 Exp $
+ * $Id: bcmutils.h,v 13.184.4.6.2.1.18.25 2010/04/26 06:05:24 Exp $
  */
 
 
@@ -121,88 +121,6 @@ struct spktq {
 
 #define PKTQ_PREC_ITER(pq, prec)        for (prec = (pq)->num_prec - 1; prec >= 0; prec--)
 
-#ifndef BCMDONGLEHOST
-
-#define PKTPOOL_LEN_USB_RCLM1	8
-#define PKTPOOL_LEN_MAX		29
-#define PKTPOOL_CB_MAX		3
-
-struct pktpool;
-typedef void (*pktpool_cb_t)(struct pktpool *pool, void *arg);
-typedef struct {
-	pktpool_cb_t cb;
-	void *arg;
-} pktpool_cbinfo_t;
-
-#ifdef BCMDBG_POOL
-typedef struct {
-	void *p;
-	uint32 cycles;
-	uint32 dur;
-} pktpool_dbg_t;
-
-typedef struct {
-	uint8 txdh;	
-	uint8 txd11;	
-	uint8 enq;	
-	uint8 rxdh;	
-	uint8 rxd11;	
-	uint8 rxq;	
-	uint8 idle;	
-} pktpool_stats_t;
-#endif 
-
-typedef struct pktpool {
-	uint16 r;
-	uint16 w;
-	uint16 len;
-	uint16 maxlen;
-	uint16 plen;
-	bool istx;
-	bool empty;
-	uint8 cbtoggle;
-	uint8 cbcnt;
-	uint8 ecbcnt;
-	bool emptycb_disable;
-	pktpool_cbinfo_t cbs[PKTPOOL_CB_MAX];
-	pktpool_cbinfo_t ecbs[PKTPOOL_CB_MAX];
-	void *q[PKTPOOL_LEN_MAX + 1];
-	pktpool_cbinfo_t *availcb_excl;
-
-#ifdef BCMDBG_POOL
-	uint8 dbg_cbcnt;
-	pktpool_cbinfo_t dbg_cbs[PKTPOOL_CB_MAX];
-	uint16 dbg_qlen;
-	pktpool_dbg_t dbg_q[PKTPOOL_LEN_MAX + 1];
-#endif
-} pktpool_t;
-
-extern int pktpool_init(osl_t *osh, pktpool_t *pktp, int *pktplen, int plen, bool istx);
-extern int pktpool_deinit(osl_t *osh, pktpool_t *pktp);
-extern void* pktpool_get(pktpool_t *pktp);
-extern void pktpool_free(pktpool_t *pktp, void *p);
-extern int pktpool_add(pktpool_t *pktp, void *p);
-extern uint16 pktpool_avail(pktpool_t *pktp);
-extern int pktpool_avail_notify_normal(osl_t *osh, pktpool_t *pktp);
-extern int pktpool_avail_notify_exclusive(osl_t *osh, pktpool_t *pktp, pktpool_cb_t cb);
-extern int pktpool_avail_register(osl_t *osh, pktpool_t *pktp,
-	pktpool_cb_t cb, void *arg);
-extern int pktpool_empty_register(osl_t *osh, pktpool_t *pktp,
-	pktpool_cb_t cb, void *arg);
-extern int pktpool_setmaxlen(pktpool_t *pktp, uint16 maxlen);
-extern void pktpool_emptycb_disable(pktpool_t *pktp, bool disable);
-
-#define pktpool_len(pp)			((pp)->len - 1)
-#define pktpool_maxlen(pp)		((pp)->maxlen)
-
-#ifdef BCMDBG_POOL
-extern int pktpool_dbg_register(osl_t *osh, pktpool_t *pktp, pktpool_cb_t cb, void *arg);
-extern int pktpool_start_trigger(pktpool_t *pktp, void *p);
-extern int pktpool_dbg_dump(pktpool_t *pktp);
-extern int pktpool_dbg_notify(pktpool_t *pktp);
-extern int pktpool_stats_dump(pktpool_t *pktp, pktpool_stats_t *stats);
-#endif 
-#endif 
 
 
 
@@ -425,9 +343,7 @@ extern int bcm_iovar_lencheck(const bcm_iovar_t *table, void *arg, int len, bool
 #define BCME_RXFAIL			-39	
 #define BCME_NODEVICE			-40	
 #define BCME_UNFINISHED			-41	
-#define BCME_NONRESIDENT		-42	
-#define BCME_DISABLED			-43	
-#define BCME_LAST			BCME_DISABLED
+#define BCME_LAST			BCME_UNFINISHED
 
 
 #define BCMERRSTRINGTABLE {		\
@@ -473,8 +389,6 @@ extern int bcm_iovar_lencheck(const bcm_iovar_t *table, void *arg, int len, bool
 	"RX Failure",			\
 	"Device Not Present",		\
 	"Command not finished",		\
-	"Nonresident overlay access", \
-	"Disabled in this build" \
 }
 
 #ifndef ABS
@@ -642,10 +556,10 @@ xor_128bit_block(const uint8 *src1, const uint8 *src2, uint8 *dst)
 	    (((uintptr)src1 | (uintptr)src2 | (uintptr)dst) & 3) == 0) {
 		
 		
-		((uint32 *)dst)[0] = ((const uint32 *)src1)[0] ^ ((const uint32 *)src2)[0];
-		((uint32 *)dst)[1] = ((const uint32 *)src1)[1] ^ ((const uint32 *)src2)[1];
-		((uint32 *)dst)[2] = ((const uint32 *)src1)[2] ^ ((const uint32 *)src2)[2];
-		((uint32 *)dst)[3] = ((const uint32 *)src1)[3] ^ ((const uint32 *)src2)[3];
+		((uint32 *)dst)[0] = ((uint32 *)src1)[0] ^ ((uint32 *)src2)[0];
+		((uint32 *)dst)[1] = ((uint32 *)src1)[1] ^ ((uint32 *)src2)[1];
+		((uint32 *)dst)[2] = ((uint32 *)src1)[2] ^ ((uint32 *)src2)[2];
+		((uint32 *)dst)[3] = ((uint32 *)src1)[3] ^ ((uint32 *)src2)[3];
 	} else {
 		
 		int k;
@@ -664,11 +578,10 @@ extern uint32 hndcrc32(uint8 *p, uint nbytes, uint32 crc);
 	defined(WLMSG_ASSOC)
 extern int bcm_format_flags(const bcm_bit_desc_t *bd, uint32 flags, char* buf, int len);
 extern int bcm_format_hex(char *str, const void *bytes, int len);
+extern void prhex(const char *msg, uchar *buf, uint len);
 #endif 
-extern const char *bcm_crypto_algo_name(uint algo);
 extern char *bcm_brev_str(uint32 brev, char *buf);
 extern void printbig(char *buf);
-extern void prhex(const char *msg, uchar *buf, uint len);
 
 
 extern bcm_tlv_t *bcm_next_tlv(bcm_tlv_t *elt, int *buflen);
@@ -709,7 +622,10 @@ extern uint bcmdumpfields(bcmutl_rdreg_rtn func_ptr, void *arg0, uint arg1, stru
 extern uint bcm_mkiovar(char *name, char *data, uint datalen, char *buf, uint len);
 extern uint bcm_bitcount(uint8 *bitmap, uint bytelength);
 
+#if defined(WLTINYDUMP) || defined(WLMSG_INFORM) || defined(WLMSG_ASSOC) || \
+	defined(WLMSG_PRPKT) || defined(WLMSG_WSEC)
 extern int bcm_format_ssid(char* buf, const uchar ssid[], uint ssid_len);
+#endif 
 
 
 #define SSID_FMT_BUF_LEN	((4 * DOT11_MAX_SSID_LEN) + 1)

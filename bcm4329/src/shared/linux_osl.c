@@ -3,7 +3,7 @@
  *
  * Copyright (C) 1999-2010, Broadcom Corporation
  * 
- *         Unless you and Broadcom execute a separate written software license
+ *      Unless you and Broadcom execute a separate written software license
  * agreement governing use of this software, this software is licensed to you
  * under the terms of the GNU General Public License version 2 (the "GPL"),
  * available at http://www.broadcom.com/licenses/GPLv2.php, with the
@@ -21,12 +21,14 @@
  * software in any way with any other Broadcom software provided under a license
  * other than the GPL, without Broadcom's express prior written consent.
  *
- * $Id: linux_osl.c,v 1.125.12.3.8.1.54.9.2.1 2010/06/30 03:10:10 Exp $
+ * $Id: linux_osl.c,v 1.125.12.3.8.7 2010/05/04 21:10:04 Exp $
  */
 
 
 #define LINUX_OSL
-
+#if defined(CHROMIUMOS_COMPAT_WIRELESS)
+#include <linux/sched.h>
+#endif
 #include <typedefs.h>
 #include <bcmendian.h>
 #include <linuxver.h>
@@ -124,12 +126,10 @@ static int16 linuxbcmerrormap[] =
 	-EIO,			
 	-EINVAL,		
 	-EINVAL,		
-	-ENODATA,		
-	-EOPNOTSUPP,		
 
 
 
-#if BCME_LAST != -43
+#if BCME_LAST != -41
 #error "You need to add a OS error translation in the linuxbcmerrormap \
 	for new error code defined in bcmutils.h"
 #endif 
@@ -156,6 +156,12 @@ osl_attach(void *pdev, uint bustype, bool pkttag)
 
 	osh = kmalloc(sizeof(osl_t), GFP_ATOMIC);
 	ASSERT(osh);
+
+/* LGE_CHANGE_S, [dongp.kim@lge.com], 2010-04-22, WBT Fix */
+// WBT Fix TD# 37025, 37026
+	if ( ! osh )
+	    return NULL;
+/* LGE_CHANGE_S, [dongp.kim@lge.com], 2010-04-22, WBT Fix */
 
 	bzero(osh, sizeof(osl_t));
 
@@ -198,14 +204,14 @@ osl_attach(void *pdev, uint bustype, bool pkttag)
 		else
 			printk("alloc static buf at %x!\n", (unsigned int)bcm_static_buf);
 
-
+		
 		init_MUTEX(&bcm_static_buf->static_sem);
 
-
+		
 		bcm_static_buf->buf_ptr = (unsigned char *)bcm_static_buf + STATIC_BUF_SIZE;
 
 	}
-
+	
 	if (!bcm_static_skb)
 	{
 		int i;
@@ -236,7 +242,7 @@ osl_detach(osl_t *osh)
 	if (bcm_static_skb) {
 		bcm_static_skb = 0;
 	}
-#endif
+#endif 
 	ASSERT(osh->magic == OS_HANDLE_MAGIC);
 	kfree(osh);
 }
@@ -296,17 +302,18 @@ osl_pktget_static(osl_t *osh, uint len)
 	int i = 0;
 	struct sk_buff *skb;
 
-
+	
 	if (len > (PAGE_SIZE*2))
 	{
+		printk("Do we really need this big skb??\n");
 		return osl_pktget(osh, len);
 	}
 
-
+	
 	down(&bcm_static_skb->osl_pkt_sem);
 	if (len <= PAGE_SIZE)
 	{
-
+		
 		for (i = 0; i < MAX_STATIC_PKT_NUM; i++)
 		{
 			if (bcm_static_skb->pkt_use[i] == 0)
@@ -321,12 +328,12 @@ osl_pktget_static(osl_t *osh, uint len)
 			skb = bcm_static_skb->skb_4k[i];
 			skb->tail = skb->data + len;
 			skb->len = len;
-
+			
 			return skb;
 		}
 	}
 
-
+	
 	for (i = 0; i < MAX_STATIC_PKT_NUM; i++)
 	{
 		if (bcm_static_skb->pkt_use[i+MAX_STATIC_PKT_NUM] == 0)
@@ -340,11 +347,12 @@ osl_pktget_static(osl_t *osh, uint len)
 		skb = bcm_static_skb->skb_8k[i];
 		skb->tail = skb->data + len;
 		skb->len = len;
-
+		
 		return skb;
 	}
 
 
+	
 	up(&bcm_static_skb->osl_pkt_sem);
 	printk("all static pkt in use!\n");
 	return osl_pktget(osh, len);
@@ -355,7 +363,7 @@ void
 osl_pktfree_static(osl_t *osh, void *p, bool send)
 {
 	int i;
-
+	
 	for (i = 0; i < MAX_STATIC_PKT_NUM*2; i++)
 	{
 		if (p == bcm_static_skb->skb_4k[i])
@@ -364,7 +372,7 @@ osl_pktfree_static(osl_t *osh, void *p, bool send)
 			bcm_static_skb->pkt_use[i] = 0;
 			up(&bcm_static_skb->osl_pkt_sem);
 
-
+			
 			return;
 		}
 	}
@@ -453,7 +461,9 @@ void*
 osl_malloc(osl_t *osh, uint size)
 {
 	void *addr;
-
+/* LGE_CHANGE_S, [dongp.kim@lge.com], 2010-03-04, in order to prevent kernel panic because of memory leak, when Wi-Fi insmode */
+	int flags = 0;
+/* LGE_CHANGE_E, [dongp.kim@lge.com], 2010-03-04, in order to prevent kernel panic because of memory leak, when Wi-Fi insmode */
 	
 	if (osh)
 		ASSERT(osh->magic == OS_HANDLE_MAGIC);
@@ -465,20 +475,20 @@ osl_malloc(osl_t *osh, uint size)
 		if ((size >= PAGE_SIZE)&&(size <= STATIC_BUF_SIZE))
 		{
 			down(&bcm_static_buf->static_sem);
-
+			
 			for (i = 0; i < MAX_STATIC_BUF_NUM; i++)
 			{
 				if (bcm_static_buf->buf_use[i] == 0)
 					break;
 			}
-
+			
 			if (i == MAX_STATIC_BUF_NUM)
 			{
 				up(&bcm_static_buf->static_sem);
 				printk("all static buff in use!\n");
 				goto original;
 			}
-
+			
 			bcm_static_buf->buf_use[i] = 1;
 			up(&bcm_static_buf->static_sem);
 
@@ -491,8 +501,15 @@ osl_malloc(osl_t *osh, uint size)
 	}
 original:
 #endif 
-
-	if ((addr = kmalloc(size, GFP_ATOMIC)) == NULL) {
+/* LGE_CHANGE_S, [dongp.kim@lge.com], 2010-03-04, in order to prevent kernel panic because of memory leak, when Wi-Fi insmode */
+	if ( size > (8 *1024) ){
+		flags |= GFP_KERNEL;
+	}
+	else{
+		flags |= GFP_ATOMIC; // org value
+	}
+/* LGE_CHANGE_E, [dongp.kim@lge.com], 2010-03-04, in order to prevent kernel panic because of memory leak, when Wi-Fi insmode */
+	if ((addr = kmalloc(size, flags)) == NULL) {
 		if (osh)
 			osh->failed++;
 		return (NULL);
@@ -513,9 +530,9 @@ osl_mfree(osl_t *osh, void *addr, uint size)
 			<= ((unsigned char *)bcm_static_buf + STATIC_BUF_TOTAL_LEN)))
 		{
 			int buf_idx = 0;
-
+			
 			buf_idx = ((unsigned char *)addr - bcm_static_buf->buf_ptr)/STATIC_BUF_SIZE;
-
+			
 			down(&bcm_static_buf->static_sem);
 			bcm_static_buf->buf_use[buf_idx] = 0;
 			up(&bcm_static_buf->static_sem);
